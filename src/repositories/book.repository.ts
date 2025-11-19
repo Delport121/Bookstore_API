@@ -30,9 +30,58 @@ export class BookRepository {
         return newBook;
     }
 
-    // Read all books
-    findAll(): Book[] {
-        return books;
+    // Read all books with optional filters
+    findAll(filters?: {
+        genre?: string;
+        author?: string;
+        title?: string;
+        minPrice?: number;
+        maxPrice?: number;
+    }): Book[] {
+        // If no filters provided or all filter values are empty/undefined
+        if (!filters) {
+            return books;
+        }
+        
+        const hasActiveFilters = 
+            (filters.genre !== undefined && filters.genre !== '') ||
+            (filters.author !== undefined && filters.author !== '') ||
+            (filters.title !== undefined && filters.title !== '') ||
+            filters.minPrice !== undefined ||
+            filters.maxPrice !== undefined;
+        
+        if (!hasActiveFilters) {
+            return books;
+        }
+        
+        return books.filter(book => {
+            // Filter by genre (case-insensitive, exact match)
+            if (filters.genre && filters.genre !== '' && book.genre.toLowerCase() !== filters.genre.toLowerCase()) {
+                return false;
+            }
+            
+            // Filter by author (case-insensitive, partial match)
+            if (filters.author && filters.author !== '' && !book.author.toLowerCase().includes(filters.author.toLowerCase())) {
+                return false;
+            }
+            
+            // Filter by title (case-insensitive, partial match)
+            if (filters.title && filters.title !== '' && !book.title.toLowerCase().includes(filters.title.toLowerCase())) {
+                return false;
+            }
+            
+            // Filter by minimum price
+            if (filters.minPrice !== undefined && book.price < filters.minPrice) {
+                return false;
+            }
+            
+            // Filter by maximum price
+            if (filters.maxPrice !== undefined && book.price > filters.maxPrice) {
+                return false;
+            }
+            
+            return true;
+        });
     }
 
     // Read a book by ID

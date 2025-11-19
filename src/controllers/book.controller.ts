@@ -28,8 +28,28 @@ export const createBook = (req: Request, res: Response): Response => {
 };
 
 // GET /books
+// Supports query parameters: ?genre=Fiction&author=Harper Lee&title=Mockingbird&minPrice=10&maxPrice=100
 export const getAllBooks = (req: Request, res: Response): Response => {
-    const books = bookService.getAllBooks();
+    const { genre, author, title, minPrice, maxPrice } = req.query;
+    
+    // Parse price filters if provided
+    const filters = {
+        genre: genre as string | undefined,
+        author: author as string | undefined,
+        title: title as string | undefined,
+        minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
+        maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
+    };
+    
+    // Validate price filters
+    if (filters.minPrice !== undefined && isNaN(filters.minPrice)) {
+        return res.status(400).json({ message: 'Invalid minPrice parameter.' });
+    }
+    if (filters.maxPrice !== undefined && isNaN(filters.maxPrice)) {
+        return res.status(400).json({ message: 'Invalid maxPrice parameter.' });
+    }
+    
+    const books = bookService.getAllBooks(filters);
     return res.status(200).json(books);
 };
 
@@ -92,7 +112,7 @@ export const deleteBook = (req: Request, res: Response): Response => {
 
 /**
  * Endpoint: GET /books/discounted-price?genre={genre_name}&discount={discount_percentage}
- * Description: Calculate the total discounted price for all books in a specific genre. [cite: 17]
+ * Description: Calculate the total discounted price for all books in a specific genre.
  */
 export const calculateDiscountedPrice = (req: Request, res: Response): Response => {
     // 1. Input Validation and Error Handling 
@@ -119,6 +139,6 @@ export const calculateDiscountedPrice = (req: Request, res: Response): Response 
     }
 
     // 4. Send Success Response
-    // Example Response shows genre, discount_percentage, and total_discounted_price [cite: 44, 45, 46]
+    // Example Response shows genre, discount_percentage, and total_discounted_price
     return res.status(200).json(result);
 };

@@ -10,6 +10,15 @@ export interface DiscountResult {
     total_discounted_price: number;
 }
 
+// Define the structure for book filters
+export interface BookFilters {
+    genre?: string;
+    author?: string;
+    title?: string;
+    minPrice?: number;
+    maxPrice?: number;
+}
+
 export class BookService {
     private bookRepository: BookRepository;
 
@@ -23,8 +32,8 @@ export class BookService {
         return this.bookRepository.create(bookData);
     }
 
-    getAllBooks(): Book[] {
-        return this.bookRepository.findAll();
+    getAllBooks(filters?: BookFilters): Book[] {
+        return this.bookRepository.findAll(filters);
     }
 
     getBookById(id: number): Book | undefined {
@@ -60,12 +69,9 @@ export class BookService {
         }
 
         // 2. Calculate the Total Original Price
-        // Suppose there are two books in the "Fiction" genre priced at $50 and $75[cite: 50].
-        // Total original price: $50 + $75 = $125 [cite: 52]
         const totalOriginalPrice = books.reduce((sum, book) => sum + book.price, 0);
 
         // 3. Calculate the Total Discounted Price
-        // Total discounted price: $125 - (10% of $125) = $112.50[cite: 53].
         const discountFactor = discountPercentage / 100;
         const totalDiscountedPrice = totalOriginalPrice * (1 - discountFactor);
         
@@ -76,7 +82,7 @@ export class BookService {
         return {
             genre: genre,
             discount_percentage: discountPercentage,
-            total_discounted_price: roundedDiscountedPrice, // Example: 112.50 [cite: 46, 53]
+            total_discounted_price: roundedDiscountedPrice,
         };
     }
 }
