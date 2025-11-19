@@ -1,0 +1,26 @@
+// tsconfig.json
+
+{
+  "compilerOptions": {
+    /* 1. Essential Configs */
+    "target": "es2020",
+    "module": "commonjs",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    
+    /* 2. Fixes for Import Errors (Crucial changes) */
+    "esModuleInterop": true,              // Must be true for 'import express from "express"'
+    "verbatimModuleSyntax": false,        // DISABLE this strict feature
+    "isolatedModules": false,             // DISABLE this strict feature
+    "skipLibCheck": true,
+    
+    /* 3. Style and Type Checking (Recommended) */
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "lib": ["es2020"]
+    // ... leave other options as they are if they don't conflict
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
