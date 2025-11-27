@@ -3,7 +3,6 @@
 import express, { Application } from 'express';
 import dotenv from 'dotenv';
 import bookRoutes from './routes/book.routes'; // Import the new router
-// We will import and use the router here later
 
 // Load environment variables from .env file
 dotenv.config();
@@ -23,5 +22,5 @@ app.get('/', (req, res) => {
 // Start the server
 app.listen(PORT, () => {
     console.log(`[server]: Server is running at http://localhost:${PORT}`);
-    console.log(`API documentation: (To be implemented)`);
+    console.log(`Books API: http://localhost:${PORT}/books`);
 });

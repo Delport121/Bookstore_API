@@ -9,6 +9,7 @@ let books: Book[] = [
     { id: 2, title: "1984", author: "George Orwell", genre: "Fiction", price: 75.00 },
     { id: 3, title: "Dune", author: "Frank Herbert", genre: "Science Fiction", price: 40.00 },
     { id: 4, title: "Sapiens", author: "Yuval Noah Harari", genre: "Non-Fiction", price: 65.00 },
+    { id: 5, title: "Educated", author: "Tara Westover", genre: "Biography", price: 55.00 },
 ];
 
 let nextId = books.length + 1;
@@ -56,7 +57,7 @@ export class BookRepository {
         
         return books.filter(book => {
             // Filter by genre (case-insensitive, exact match)
-            if (filters.genre && filters.genre !== '' && book.genre.toLowerCase() !== filters.genre.toLowerCase()) {
+            if (filters.genre && filters.genre !== '' && !(book.genre.toLowerCase() === filters.genre.toLowerCase())) {
                 return false;
             }
             

@@ -1,17 +1,18 @@
 // src/services/book.service.test.ts
 
 import { BookService } from './book.service';
-import { BookRepository } from '../repositories/book.repository'; // Import the repository to mock/inspect data
+import { BookRepository } from '../repositories/book.repository';
+import { Book, CreateBookDTO } from '../models/book.model';
 
 // Mocking the BookRepository to control the data for testing
 jest.mock('../repositories/book.repository');
 
-describe('BookService - Discount Calculation', () => {
+describe('BookService', () => {
     let bookService: BookService;
     let mockBookRepository: jest.Mocked<BookRepository>;
 
     // Define the sample data based on the requirement example
-    const mockBooks = [
+    const mockBooks: Book[] = [
         { id: 1, title: "To Kill a Mockingbird", author: "Harper Lee", genre: "Fiction", price: 50.00 },
         { id: 2, title: "1984", author: "George Orwell", genre: "Fiction", price: 75.00 },
         { id: 3, title: "Dune", author: "Frank Herbert", genre: "Science Fiction", price: 40.00 },
@@ -93,5 +94,230 @@ describe('BookService - Discount Calculation', () => {
         const result = bookService.calculateDiscountedPriceForGenre(genre, discount);
 
         expect(result).toBeNull();
+    });
+});
+
+// CRUD Operations Tests
+describe('BookService - CRUD Operations', () => {
+    let bookService: BookService;
+    let mockBookRepository: jest.Mocked<BookRepository>;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        bookService = new BookService();
+        mockBookRepository = (BookRepository as jest.Mock).mock.instances[0] as jest.Mocked<BookRepository>;
+    });
+
+    describe('createBook', () => {
+        it('should create a new book and return it with an ID', () => {
+            const newBookData: CreateBookDTO = {
+                title: "The Hobbit",
+                author: "J.R.R. Tolkien",
+                genre: "Fantasy",
+                price: 45.00
+            };
+
+            const expectedBook: Book = {
+                id: 5,
+                ...newBookData
+            };
+
+            mockBookRepository.create.mockReturnValue(expectedBook);
+
+            const result = bookService.createBook(newBookData);
+
+            expect(result).toEqual(expectedBook);
+            expect(mockBookRepository.create).toHaveBeenCalledWith(newBookData);
+            expect(mockBookRepository.create).toHaveBeenCalledTimes(1);
+        });
+
+        it('should handle creating multiple books with unique IDs', () => {
+            const book1: CreateBookDTO = { title: "Book 1", author: "Author 1", genre: "Genre 1", price: 10 };
+            const book2: CreateBookDTO = { title: "Book 2", author: "Author 2", genre: "Genre 2", price: 20 };
+
+            mockBookRepository.create
+                .mockReturnValueOnce({ id: 1, ...book1 })
+                .mockReturnValueOnce({ id: 2, ...book2 });
+
+            const result1 = bookService.createBook(book1);
+            const result2 = bookService.createBook(book2);
+
+            expect(result1.id).toBe(1);
+            expect(result2.id).toBe(2);
+            expect(mockBookRepository.create).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe('getAllBooks', () => {
+        const mockBooksData: Book[] = [
+            { id: 1, title: "To Kill a Mockingbird", author: "Harper Lee", genre: "Fiction", price: 50.00 },
+            { id: 2, title: "1984", author: "George Orwell", genre: "Fiction", price: 75.00 },
+            { id: 3, title: "Dune", author: "Frank Herbert", genre: "Science Fiction", price: 40.00 },
+        ];
+
+        it('should return all books when no filters are provided', () => {
+            mockBookRepository.findAll.mockReturnValue(mockBooksData);
+
+            const result = bookService.getAllBooks();
+
+            expect(result).toEqual(mockBooksData);
+            expect(mockBookRepository.findAll).toHaveBeenCalledWith(undefined);
+            expect(result.length).toBe(3);
+        });
+
+        it('should return filtered books by genre', () => {
+            const filteredBooks = mockBooksData.filter(b => b.genre === 'Fiction');
+            mockBookRepository.findAll.mockReturnValue(filteredBooks);
+
+            const result = bookService.getAllBooks({ genre: 'Fiction' });
+
+            expect(result).toEqual(filteredBooks);
+            expect(result.length).toBe(2);
+            expect(mockBookRepository.findAll).toHaveBeenCalledWith({ genre: 'Fiction' });
+        });
+
+        it('should return filtered books by author', () => {
+            const filteredBooks = [mockBooksData[0]];
+            mockBookRepository.findAll.mockReturnValue(filteredBooks);
+
+            const result = bookService.getAllBooks({ author: 'Harper Lee' });
+
+            expect(result).toEqual(filteredBooks);
+            expect(result.length).toBe(1);
+            expect(result[0].author).toBe('Harper Lee');
+        });
+
+        it('should return filtered books by price range', () => {
+            const filteredBooks = mockBooksData.filter(b => b.price >= 40 && b.price <= 50);
+            mockBookRepository.findAll.mockReturnValue(filteredBooks);
+
+            const result = bookService.getAllBooks({ minPrice: 40, maxPrice: 50 });
+
+            expect(result).toEqual(filteredBooks);
+            expect(result.length).toBe(2);
+        });
+
+        it('should return filtered books with multiple filters', () => {
+            const filteredBooks = [mockBooksData[0]];
+            mockBookRepository.findAll.mockReturnValue(filteredBooks);
+
+            const result = bookService.getAllBooks({ 
+                genre: 'Fiction', 
+                maxPrice: 60 
+            });
+
+            expect(result).toEqual(filteredBooks);
+            expect(mockBookRepository.findAll).toHaveBeenCalledWith({ 
+                genre: 'Fiction', 
+                maxPrice: 60 
+            });
+        });
+
+        it('should return empty array when no books match filters', () => {
+            mockBookRepository.findAll.mockReturnValue([]);
+
+            const result = bookService.getAllBooks({ genre: 'Mystery' });
+
+            expect(result).toEqual([]);
+            expect(result.length).toBe(0);
+        });
+    });
+
+    describe('getBookById', () => {
+        it('should return a book when a valid ID is provided', () => {
+            const expectedBook: Book = {
+                id: 1,
+                title: "To Kill a Mockingbird",
+                author: "Harper Lee",
+                genre: "Fiction",
+                price: 50.00
+            };
+
+            mockBookRepository.findById.mockReturnValue(expectedBook);
+
+            const result = bookService.getBookById(1);
+
+            expect(result).toEqual(expectedBook);
+            expect(mockBookRepository.findById).toHaveBeenCalledWith(1);
+        });
+
+        it('should return undefined when book is not found', () => {
+            mockBookRepository.findById.mockReturnValue(undefined);
+
+            const result = bookService.getBookById(999);
+
+            expect(result).toBeUndefined();
+            expect(mockBookRepository.findById).toHaveBeenCalledWith(999);
+        });
+    });
+
+    describe('updateBook', () => {
+        it('should update a book and return the updated book', () => {
+            const updateData: Partial<CreateBookDTO> = {
+                price: 55.00,
+                title: "To Kill a Mockingbird - Special Edition"
+            };
+
+            const updatedBook: Book = {
+                id: 1,
+                title: "To Kill a Mockingbird - Special Edition",
+                author: "Harper Lee",
+                genre: "Fiction",
+                price: 55.00
+            };
+
+            mockBookRepository.update.mockReturnValue(updatedBook);
+
+            const result = bookService.updateBook(1, updateData);
+
+            expect(result).toEqual(updatedBook);
+            expect(mockBookRepository.update).toHaveBeenCalledWith(1, updateData);
+        });
+
+        it('should return undefined when updating a non-existent book', () => {
+            mockBookRepository.update.mockReturnValue(undefined);
+
+            const result = bookService.updateBook(999, { price: 100 });
+
+            expect(result).toBeUndefined();
+            expect(mockBookRepository.update).toHaveBeenCalledWith(999, { price: 100 });
+        });
+
+        it('should handle partial updates', () => {
+            const updatedBook: Book = {
+                id: 2,
+                title: "1984",
+                author: "George Orwell",
+                genre: "Fiction",
+                price: 80.00
+            };
+
+            mockBookRepository.update.mockReturnValue(updatedBook);
+
+            const result = bookService.updateBook(2, { price: 80.00 });
+
+            expect(result).toEqual(updatedBook);
+            expect(result?.price).toBe(80.00);
+        });
+    });
+
+    describe('deleteBook', () => {
+        it('should delete a book and return true when successful', () => {
+            mockBookRepository.delete.mockReturnValue(true);
+
+            const result = bookService.deleteBook(1);
+
+            expect(result).toBe(true);
+            expect(mockBookRepository.delete).toHaveBeenCalledWith(1);
+        });
+
+        it('should return false when trying to delete a non-existent book', () => {
+            mockBookRepository.delete.mockReturnValue(false);
+
+            const result = bookService.deleteBook(999);
+
+            expect(result).toBe(false);
+            expect(mockBookRepository.delete).toHaveBeenCalledWith(999);
+        });
     });
 });

@@ -3,7 +3,6 @@
 import { Request, Response } from 'express';
 import { BookService } from '../services/book.service';
 import { CreateBookDTO } from '../models/book.model';
-// We will also add CRUD controllers here later
 
 const bookService = new BookService();
 
@@ -22,7 +21,7 @@ export const createBook = (req: Request, res: Response): Response => {
         const newBook = bookService.createBook(req.body as CreateBookDTO);
         return res.status(201).json(newBook);
     } catch (error) {
-        // Handle potential errors from the service layer, though unlikely here
+        // Handle potential errors from the service layer
         return res.status(500).json({ message: 'Failed to create book.' });
     }
 };
@@ -50,6 +49,13 @@ export const getAllBooks = (req: Request, res: Response): Response => {
     }
     
     const books = bookService.getAllBooks(filters);
+    
+    // Check if filters were applied and no books were found
+    const hasFilters = genre || author || title || minPrice || maxPrice;
+    if (hasFilters && books.length === 0) {
+        return res.status(404).json({ message: 'No books found matching the specified filters.' });
+    }
+    
     return res.status(200).json(books);
 };
 
