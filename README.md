@@ -23,8 +23,8 @@ The API is built using an **n-layered architecture** to ensure separation of con
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/Delport121/bookstore_API.git
-    cd bookstore_API
+    git clone https://github.com/Delport121/Bookstore_API.git
+    cd Bookstore_API
     ```
 
 2.  **Install dependencies:**
